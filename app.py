@@ -16,63 +16,81 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "my_recipe.csv")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # -----------------------------
-# Load Dataset (ONCE)
+# Global ML Objects (lazy load)
 # -----------------------------
-print("📊 Loading dataset...")
-recipe_df = pd.read_csv(CSV_PATH)
+recipe_df = None
+scaler = None
+imputer = None
+vectorizer = None
+knn = None
+combined_features = None
 
-recipe_df["ingredients_list"] = recipe_df["ingredients_list"].fillna("")
-recipe_df["calories"] = pd.to_numeric(recipe_df["calories"], errors="coerce").fillna(0)
-recipe_df["fat"] = pd.to_numeric(recipe_df["fat"], errors="coerce").fillna(0)
-recipe_df["carbohydrates"] = pd.to_numeric(
-    recipe_df["carbohydrates"], errors="coerce"
-).fillna(0)
-recipe_df["protein"] = pd.to_numeric(recipe_df["protein"], errors="coerce").fillna(0)
-recipe_df["avrg_rate"] = pd.to_numeric(recipe_df["avrg_rate"], errors="coerce").fillna(
-    0
-)
-
-print(f"✅ Dataset loaded: {len(recipe_df)} recipes")
 
 # -----------------------------
-# Preprocessing
+# Lazy Load Model
 # -----------------------------
-imputer = SimpleImputer(strategy="mean")
+def load_model():
+    global recipe_df, scaler, imputer, vectorizer, knn, combined_features
 
-numerical_features = recipe_df[["calories", "fat", "carbohydrates", "protein"]]
+    if recipe_df is not None:
+        return
 
-numerical_imputed = imputer.fit_transform(numerical_features)
+    print("📊 Loading dataset...")
 
-scaler = StandardScaler()
-numerical_scaled = scaler.fit_transform(numerical_imputed)
+    recipe_df = pd.read_csv(CSV_PATH)
 
-vectorizer = TfidfVectorizer(max_features=500)
-ingredient_vectors = vectorizer.fit_transform(recipe_df["ingredients_list"]).toarray()
+    # ✅ Keep only 3000 random recipes
+    if len(recipe_df) > 3000:
+        recipe_df = recipe_df.sample(n=3000, random_state=42)
 
-combined_features = np.hstack([numerical_scaled, ingredient_vectors])
+    # Clean data
+    recipe_df["ingredients_list"] = recipe_df["ingredients_list"].fillna("")
+    recipe_df["calories"] = pd.to_numeric(recipe_df["calories"], errors="coerce").fillna(0)
+    recipe_df["fat"] = pd.to_numeric(recipe_df["fat"], errors="coerce").fillna(0)
+    recipe_df["carbohydrates"] = pd.to_numeric(
+        recipe_df["carbohydrates"], errors="coerce"
+    ).fillna(0)
+    recipe_df["protein"] = pd.to_numeric(recipe_df["protein"], errors="coerce").fillna(0)
+    recipe_df["avrg_rate"] = pd.to_numeric(recipe_df["avrg_rate"], errors="coerce").fillna(0)
 
-# -----------------------------
-# KNN Model
-# -----------------------------
-knn = NearestNeighbors(n_neighbors=5, metric="cosine")
-knn.fit(combined_features)
+    print(f"✅ Using {len(recipe_df)} recipes")
 
-print("🤖 KNN model ready")
+    # Numerical preprocessing
+    imputer = SimpleImputer(strategy="mean")
+    numerical_features = recipe_df[["calories", "fat", "carbohydrates", "protein"]]
+    numerical_imputed = imputer.fit_transform(numerical_features)
+
+    scaler = StandardScaler()
+    numerical_scaled = scaler.fit_transform(numerical_imputed)
+
+    # Text preprocessing (memory-safe)
+    vectorizer = TfidfVectorizer(max_features=200)
+    ingredient_vectors = vectorizer.fit_transform(recipe_df["ingredients_list"])
+
+    combined_features = np.hstack(
+        [numerical_scaled, ingredient_vectors.toarray()]
+    )
+
+    # KNN model
+    knn = NearestNeighbors(n_neighbors=5, metric="cosine")
+    knn.fit(combined_features)
+
+    print("🤖 KNN model ready")
 
 
 # -----------------------------
 # Recommendation Logic
 # -----------------------------
 def recommend_recipes(input_features):
+    load_model()
+
     calories, fats, carbs, protein, ingredients_str = input_features
 
     num = [calories, fats, carbs, protein]
     num_scaled = scaler.transform(imputer.transform([num]))
-
     ing_vec = vectorizer.transform([ingredients_str]).toarray()
 
     input_combined = np.hstack([num_scaled, ing_vec])
@@ -111,12 +129,10 @@ def upload():
     except:
         return jsonify({"error": "Invalid input values"}), 400
 
-    # Image is optional now (just save it)
     if "image" in request.files:
         img = request.files["image"]
         img.save(os.path.join(UPLOAD_FOLDER, img.filename))
 
-    # Static ingredients (NO YOLO)
     ingredients_str = "tomato, onion, garlic"
 
     input_features = [
@@ -154,9 +170,6 @@ def test():
 # Run App
 # -----------------------------
 if __name__ == "__main__":
-    print("🚀 Starting Ryori (YOLO disabled)")
-
-    port = int(os.environ.get("PORT", 5000))  # <-- Use Render's port
+    print("🚀 Starting Ryori (Render optimized)")
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
-
-
