@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ryori: Recipe Discovery</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
+            color: #2d3e2d;
+            overflow-x: hidden;
+        }
+
+        /* Decorative elements */
+        .decoration {
+            position: fixed;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .herb-left {
+            top: 10%;
+            left: -50px;
+            width: 200px;
+            height: 400px;
+            background: linear-gradient(90deg, transparent, #4caf50, transparent);
+            transform: rotate(-15deg);
+            border-radius: 50% 50% 0 0;
+        }
+
+        .herb-right {
+            top: 40%;
+            right: -50px;
+            width: 180px;
+            height: 350px;
+            background: linear-gradient(90deg, transparent, #66bb6a, transparent);
+            transform: rotate(20deg);
+            border-radius: 50% 50% 0 0;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #2e5f3e, #4a7c59);
+            padding: 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .header-images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            height: 200px;
+            opacity: 0.3;
+        }
+
+        .header-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.5s ease;
+        }
+
+        .header-images:hover .header-image {
+            opacity: 0.5;
+        }
+
+        .header-images .header-image:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .header-content {
+            padding: 80px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            color: #fff;
+            font-size: 5rem;
+            font-weight: 300;
+            letter-spacing: 8px;
+            text-transform: lowercase;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 2px 2px 20px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            color: #e8f5e9;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            font-weight: 300;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 1400px;
+            margin: -60px auto 80px;
+            padding: 0 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-card {
+            background: #fff;
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: '🌿';
+            position: absolute;
+            font-size: 300px;
+            top: -100px;
+            right: -50px;
+            opacity: 0.05;
+        }
+
+        .hero-text h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            color: #2e5f3e;
+            margin-bottom: 25px;
+            line-height: 1.2;
+            font-weight: 600;
+        }
+
+        .hero-text p {
+            font-size: 1.15rem;
+            color: #5a6c5a;
+            line-height: 1.8;
+            margin-bottom: 35px;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #4caf50, #66bb6a);
+            color: white;
+            padding: 18px 50px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(76,175,80,0.4);
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(76,175,80,0.5);
+        }
+
+        .hero-image {
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .hero-image-wrapper {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+        }
+
+        .hero-image:hover .hero-image-wrapper {
+            transform: rotateY(-5deg) rotateX(5deg);
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 450px;
+            object-fit: cover;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            transform: translateZ(50px);
+        }
+
+        .hero-image::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: -20px;
+            bottom: -20px;
+            background: linear-gradient(135deg, #66bb6a, #4caf50);
+            border-radius: 20px;
+            z-index: -1;
+            transform: translateZ(-50px);
+            opacity: 0.3;
+        }
+
+        /* Form Section */
+        .form-container {
+            max-width: 900px;
+            margin: 80px auto;
+            padding: 0 40px;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .form-card::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #c8e6c9, transparent);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        .form-card h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.8rem;
+            color: #2e5f3e;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .form-subtitle {
+            text-align: center;
+            color: #5a6c5a;
+            font-size: 1rem;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #2e5f3e;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #66bb6a;
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(102,187,106,0.2);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border: 2px dashed #66bb6a;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #2e5f3e;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+            border-color: #4caf50;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #5a6c5a;
+            text-align: center;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 4px solid #e8f5e9;
+            border-top: 4px solid #4caf50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            color: #2e5f3e;
+        }
+
+        /* Status Message */
+        .status-message {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.05rem;
+            display: none;
+        }
+
+        .status-message.info {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: #2e5f3e;
+            border: 2px solid #81c784;
+        }
+
+        .status-message.warning {
+            background: linear-gradient(135deg, #fff9c4, #fff59d);
+            color: #8d6e00;
+            border: 2px solid #ffd54f;
+        }
+
+        /* Recipes Grid */
+        .recipes-section {
+            max-width: 1400px;
+            margin: 80px auto;
+            padding: 0 40px;
+        }
+
+        .recipes-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .recipes-header h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3rem;
+            color: #2e5f3e;
+            margin-bottom: 10px;
+        }
+
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 40px;
+        }
+
+        .recipe-card {
+            background: #fff;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .recipe-rank {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #4caf50, #66bb6a);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .recipe-image {
+            position: relative;
+            height: 280px;
+            overflow: visible;
+            perspective: 1000px;
+        }
+
+        .recipe-image-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+        }
+
+        .recipe-card:hover .recipe-image-inner {
+            transform: translateZ(20px) rotateX(2deg);
+        }
+
+        .recipe-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0;
+            display: block;
+        }
+
+        .recipe-image::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(135deg, rgba(102,187,106,0.4), rgba(76,175,80,0.4));
+            z-index: -1;
+            border-radius: 25px 25px 0 0;
+            transition: transform 0.6s ease;
+        }
+
+        .recipe-card:hover .recipe-image::after {
+            transform: translateZ(-30px) scale(1.05);
+        }
+
+        .recipe-content {
+            padding: 30px;
+        }
+
+        .recipe-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            color: #2e5f3e;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .recipe-ingredients {
+            background: linear-gradient(135deg, #e8f5e9, #f1f8f4);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #66bb6a;
+        }
+
+        .recipe-ingredients-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #2e5f3e;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .recipe-ingredients-list {
+            font-size: 0.95rem;
+            color: #5a6c5a;
+            line-height: 1.6;
+        }
+
+        .recipe-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 2px solid #e8f5e9;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #81c784;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2e5f3e;
+        }
+
+        .stat-value.rating {
+            color: #ff9800;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #2e5f3e, #4a7c59);
+            color: #e8f5e9;
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 100px;
+        }
+
+        footer p {
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-card {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .recipes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="decoration herb-left"></div>
+    <div class="decoration herb-right"></div>
+
+    <header>
+        <div class="header-images" id="headerImages">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=200&fit=crop" alt="Healthy bowl" class="header-image">
+            <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&h=200&fit=crop" alt="Fresh vegetables" class="header-image">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=200&fit=crop" alt="Cooking preparation" class="header-image">
+        </div>
+        <div class="header-content">
+            <h1>ryori</h1>
+            <p>discover recipes that nourish your soul</p>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-card">
+            <div class="hero-text">
+                <h2>Find Your Perfect Recipe</h2>
+                <p>Upload an image of your ingredients, tell us your nutritional needs, and let us recommend delicious recipes tailored just for you. Experience the joy of cooking with fresh, wholesome ingredients.</p>
+                <button class="cta-btn" onclick="document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });">Start Cooking</button>
+            </div>
+            <div class="hero-image">
+                <div class="hero-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=800&h=600&fit=crop" alt="Fresh ingredients">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-container">
+        <div class="form-card">
+            <h3>Your Culinary Journey Begins</h3>
+            <p class="form-subtitle">Share your preferences and discover amazing recipes</p>
+            
+            <form id="uploadForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="calories">Calories</label>
+                        <input type="number" id="calories" name="calories" step="any" required placeholder="e.g., 500">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fats">Fats (g)</label>
+                        <input type="number" id="fats" name="fats" step="any" required placeholder="e.g., 20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="carbohydrates">Carbohydrates (g)</label>
+                        <input type="number" id="carbohydrates" name="carbohydrates" step="any" required placeholder="e.g., 60">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="protein">Protein (g)</label>
+                        <input type="number" id="protein" name="protein" step="any" required placeholder="e.g., 30">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Upload Ingredient Image</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="imageInput" name="image" accept="image/*" required>
+                            <label for="imageInput" class="file-input-label">
+                                📸 Choose an image or drag here
+                            </label>
+                        </div>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="cta-btn" id="submitBtn" style="width: 100%; margin-top: 20px;">Discover Recipes</button>
+            </form>
+        </div>
+    </section>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p class="loading-text">Crafting your perfect recipe recommendations...</p>
+    </div>
+
+    <div class="status-message" id="statusMessage"></div>
+
+    <section class="recipes-section" id="recipesSection" style="display: none;">
+        <div class="recipes-header">
+            <h3>Your Personalized Recipes</h3>
+        </div>
+        <div class="recipes-grid" id="recommendations"></div>
+    </section>
+
+    <footer>
+        <p>© 2024 Ryori Recipe Recommendation System — Crafted with love and fresh ingredients</p>
+    </footer>
+
+    <script>
+        // File input display
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('fileName').textContent = fileName ? `Selected: ${fileName}` : '';
+        });
+
+        document.getElementById('uploadForm').onsubmit = async function (e) {
+            e.preventDefault();
+            
+            const loadingDiv = document.getElementById('loading');
+            const submitBtn = document.getElementById('submitBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const recommendationsDiv = document.getElementById('recommendations');
+            const recipesSection = document.getElementById('recipesSection');
+            
+            loadingDiv.classList.add('active');
+            submitBtn.disabled = true;
+            statusMessage.style.display = 'none';
+            recommendationsDiv.innerHTML = '';
+            recipesSection.style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('image', document.getElementById('imageInput').files[0]);
+            formData.append('calories', document.getElementById('calories').value);
+            formData.append('fats', document.getElementById('fats').value);
+            formData.append('carbohydrates', document.getElementById('carbohydrates').value);
+            formData.append('protein', document.getElementById('protein').value);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const recommendations = data.recommendations;
+                
+                // Update header images with first 3 recipe images
+                if (recommendations && recommendations.length >= 3) {
+                    const headerImages = document.getElementById('headerImages');
+                    headerImages.innerHTML = `
+                        <img src="${recommendations[0].image_url}" alt="${recommendations[0].recipe_name}" class="header-image" onerror="this.src='https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=200&fit=crop'">
+                        <img src="${recommendations[1].image_url}" alt="${recommendations[1].recipe_name}" class="header-image" onerror="this.src='https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&h=200&fit=crop'">
+                        <img src="${recommendations[2].image_url}" alt="${recommendations[2].recipe_name}" class="header-image" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=200&fit=crop'">
+                    `;
+                }
+                
+                loadingDiv.classList.remove('active');
+                submitBtn.disabled = false;
+                
+                if (data.is_fallback) {
+                    statusMessage.className = 'status-message warning';
+                    statusMessage.textContent = '⚡ ' + data.message;
+                    statusMessage.style.display = 'block';
+                } else {
+                    statusMessage.className = 'status-message info';
+                    statusMessage.textContent = '✨ ' + data.message;
+                    statusMessage.style.display = 'block';
+                }
+
+                recommendations.forEach((recipe, index) => {
+                    const recipeCard = document.createElement('div');
+                    recipeCard.className = 'recipe-card';
+
+                    recipeCard.innerHTML = `
+                        <div class="recipe-rank">#${index + 1}</div>
+                        <div class="recipe-image">
+                            <div class="recipe-image-inner">
+                               
+                            </div>
+                        </div>
+                        <div class="recipe-content">
+                            <h4 class="recipe-name">${recipe.recipe_name}</h4>
+                            <div class="recipe-ingredients">
+                                <div class="recipe-ingredients-title">Ingredients</div>
+                                <div class="recipe-ingredients-list">${recipe.ingredients_list}</div>
+                            </div>
+                            <div class="recipe-stats">
+                                <div class="stat">
+                                    <div class="stat-label">Match</div>
+                                    <div class="stat-value">${recipe.similarity_score.toFixed(1)}%</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-label">Rating</div>
+                                    <div class="stat-value rating">${recipe.avrg_rate.toFixed(1)} ⭐</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    recommendationsDiv.appendChild(recipeCard);
+                });
+
+                recipesSection.style.display = 'block';
+                recipesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (error) {
+                console.error('An error occurred:', error);
+                loadingDiv.classList.remove('active');
+                submitBtn.disabled = false;
+                
+                statusMessage.className = 'status-message warning';
+                statusMessage.textContent = '❌ An error occurred while fetching recommendations. Please try again.';
+                statusMessage.style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
