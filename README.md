@@ -6,15 +6,16 @@ Ryouri is a small Flask web app that recommends recipes from a local recipe data
 
 ## Screenshots
 
-Add screenshots here when they are ready:
 
 ### Home page
 
-_Screenshot placeholder — add the home page image here._
+<img width="1920" height="978" alt="Screenshot (1512)" src="https://github.com/user-attachments/assets/c186f101-8f26-4a53-8d8b-4cc94787d065" />
+
 
 ### Recipe recommendations
 
-_Screenshot placeholder — add a recommendations image here._
+<img width="1920" height="799" alt="Screenshot (1513)" src="https://github.com/user-attachments/assets/04f6a218-23f9-4c3c-b64e-bf8a2a9aef17" />
+
 
 ## Features
 
