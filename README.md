@@ -1,118 +1,109 @@
-# 🍽️ Ryouri – Recipe Recommendation System
-<img width="1536" height="1024" alt="ChatGPT Image Jan 18, 2026, 06_57_07 PM" src="https://github.com/user-attachments/assets/c6738f0d-57a8-466f-9761-50d33379a88b" />
+# Ryouri — Recipe Recommendations
 
-Ryouri is an intelligent **recipe recommendation web application** that suggests recipes based on **ingredients detected from images** and **nutritional preferences** provided by the user.  
-The system combines **computer vision**, **machine learning**, and a **Flask web interface** to deliver personalized recipe suggestions.
+Ryouri is a small Flask web app that recommends recipes from a local recipe dataset. Enter nutrition targets and ingredients you have; the app ranks recipes using nutritional similarity and ingredient text.
 
-🔗 **Live Demo**: https://recipe-recommendation-knii.onrender.com/
+> **Ingredient photos are not analyzed.** The current recommender uses the text you enter and does not run image recognition.
 
----
+## Screenshots
 
-## 📌 Features
+Add screenshots here when they are ready:
 
-- 📷 **Ingredient Detection from Images**
-  - Upload a food image and automatically detect ingredients.
-- 🧠 **ML-Based Recipe Recommendation**
-  - Uses similarity-based machine learning models to recommend recipes.
-- 🥗 **Nutritional Preference Filtering**
-  - Considers calories, protein, fats, and carbohydrates.
-- 🌐 **Flask Web Application**
-  - Clean UI with HTML/CSS templates.
-- ⚡ **Lazy Loading & Data Limiting**
-  - Optimized backend for faster response times.
+### Home page
 
----
+_Screenshot placeholder — add the home page image here._
 
-## 🏗️ Tech Stack
+### Recipe recommendations
 
-### Backend
-- **Python**
-- **Flask**
-- **Pandas, NumPy**
-- **Scikit-Learn**
+_Screenshot placeholder — add a recommendations image here._
 
-### Machine Learning
-- Ingredient detection using **YOLO (custom trained)**
-- Recipe similarity using:
-  - KNN
-  - XGBoost (experimentation & training in notebook)
+## Features
 
-### Frontend
-- **HTML**
-- **CSS**
-- **Jinja2 Templates**
+- Search a bundled dataset of nearly 49,000 recipes.
+- Rank the closest recipes using nutrition values and ingredient text.
+- Show recipe images, ingredient lists, match scores, and ratings.
+- Run locally without downloading a model or setting up API keys.
 
-### Deployment
-- **Render**
+## Requirements
 
----
+- Python 3.10 or newer
+- `pip`
 
+The web app's runtime dependencies are listed in [`requirements.txt`](requirements.txt). An optional dependency list for the exploratory notebook is in [`requirements-notebook.txt`](requirements-notebook.txt).
 
----
+## Run locally
 
-## ⚙️ How It Works
+### Windows (PowerShell)
 
-1. **User uploads a food image**
-2. **Ingredients are detected** using a trained YOLO model
-3. **Nutritional input** (calories, protein, carbs, fats) is taken
-4. **Machine learning model** finds the closest matching recipes
-5. **Recommended recipes** are displayed on the web interface
+From the project folder:
 
----
-
-## 🚀 Installation & Setup
-
-### 1️⃣ Clone the Repository
-
-git clone https://github.com/jshwadmaX/recipe-recommendation.git
-cd recipe-recommendation
-
-#### 
-2️⃣ Create a Virtual Environment (Recommended)
-python -m venv venv
-source venv/bin/activate      # Linux / macOS
-venv\Scripts\activate         # Windows
-
-3️⃣ Install Dependencies
-pip install -r requirements.txt
-
-4️⃣ Run the Application
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 python app.py
+```
 
-5️⃣ Open in Browser
-http://127.0.0.1:5000
+Open <http://127.0.0.1:5000> in your browser. Keep the terminal open while using the app; press `Ctrl+C` there to stop the server.
 
-📊 Dataset
+If PowerShell blocks virtual-environment activation, run the environment's Python directly instead:
 
-Source: Custom curated recipe dataset
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe app.py
+```
 
-Format: CSV (my_recipe.csv)
+### macOS or Linux
 
-Fields include:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python app.py
+```
 
-Recipe Name
+Then visit <http://127.0.0.1:5000>.
 
-Ingredients
+The recipe data is included in `my_recipe.csv`. The app loads and prepares it when it starts, so the first request may take a few seconds. You do not need to run a separate training step.
 
-Calories
+## Use the app
 
-Protein
+1. Enter calories, fat, carbohydrates, and protein as non-negative numbers.
+2. Enter one or more ingredients, separated by commas (for example, `tomato, onion, garlic`).
+3. Select **Discover Recipes** to see the top matches.
 
-Carbohydrates
+The match percentage represents similarity to the entered nutrition and ingredient features. The star rating is the recipe's average dataset rating; it is a separate value.
 
-Fats
+## Run the tests
 
-🔒 Limitations
+With the project environment activated:
 
-Ingredient detection accuracy depends on image quality
-Limited dataset size affects recommendation diversity
-Currently supports single-image input
+```bash
+python -m unittest discover -s tests -v
+```
 
-🛠️ Future Improvements:
-🔄 Real-time ingredient detection
-📱 Mobile-friendly UI
-🧾 User accounts & history
-🧠 Deep learning–based recommendation
-🌍 Multi-cuisine support
-## 📁 Project Structure
+## Optional notebook
 
+`Ryouri Code.ipynb` contains a separate model-experimentation workflow and is not needed to run the web app. To install its additional Python packages:
+
+```bash
+python -m pip install -r requirements-notebook.txt
+```
+
+Open the notebook in Jupyter or VS Code. Some notebook cells may require adapting their data paths or runtime-specific setup for your machine.
+
+## Project layout
+
+```text
+app.py                  Flask app and recommendation model
+my_recipe.csv           Recipe dataset used by the app
+templates/index.html    Web interface
+static/                 Styles and local fallback images
+tests/                  Automated route and recommendation tests
+requirements.txt        Web app dependencies
+requirements-notebook.txt
+                        Optional notebook dependencies
+```
