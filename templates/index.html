@@ -635,7 +635,7 @@
         <div class="hero-card">
             <div class="hero-text">
                 <h2>Find Your Perfect Recipe</h2>
-                <p>Upload an image of your ingredients, tell us your nutritional needs, and let us recommend delicious recipes tailored just for you. Experience the joy of cooking with fresh, wholesome ingredients.</p>
+                <p>Tell us the ingredients you have and your nutrition goals, and discover recipes that are a closer match. Your ingredient list helps guide every recommendation.</p>
                 <button class="cta-btn" onclick="document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });">Start Cooking</button>
             </div>
             <div class="hero-image">
@@ -650,41 +650,35 @@
         <div class="form-card">
             <h3>Your Culinary Journey Begins</h3>
             <p class="form-subtitle">Share your preferences and discover amazing recipes</p>
-            
+
             <form id="uploadForm">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="calories">Calories</label>
-                        <input type="number" id="calories" name="calories" step="any" required placeholder="e.g., 500">
+                        <input type="number" id="calories" name="calories" min="0" step="any" required placeholder="e.g., 500">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="fats">Fats (g)</label>
-                        <input type="number" id="fats" name="fats" step="any" required placeholder="e.g., 20">
+                        <input type="number" id="fats" name="fats" min="0" step="any" required placeholder="e.g., 20">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="carbohydrates">Carbohydrates (g)</label>
-                        <input type="number" id="carbohydrates" name="carbohydrates" step="any" required placeholder="e.g., 60">
+                        <input type="number" id="carbohydrates" name="carbohydrates" min="0" step="any" required placeholder="e.g., 60">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="protein">Protein (g)</label>
-                        <input type="number" id="protein" name="protein" step="any" required placeholder="e.g., 30">
+                        <input type="number" id="protein" name="protein" min="0" step="any" required placeholder="e.g., 30">
                     </div>
 
                     <div class="form-group full-width">
-                        <label>Upload Ingredient Image</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="imageInput" name="image" accept="image/*" required>
-                            <label for="imageInput" class="file-input-label">
-                                📸 Choose an image or drag here
-                            </label>
-                        </div>
-                        <div class="file-name" id="fileName"></div>
+                        <label for="ingredients">Ingredients you have</label>
+                        <input type="text" id="ingredients" name="ingredients" required maxlength="1000" placeholder="e.g., tomato, onion, garlic">
                     </div>
                 </div>
-                
+
                 <button type="submit" class="cta-btn" id="submitBtn" style="width: 100%; margin-top: 20px;">Discover Recipes</button>
             </form>
         </div>
@@ -709,114 +703,113 @@
     </footer>
 
     <script>
-        // File input display
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name || '';
-            document.getElementById('fileName').textContent = fileName ? `Selected: ${fileName}` : '';
-        });
-
         document.getElementById('uploadForm').onsubmit = async function (e) {
             e.preventDefault();
-            
+
             const loadingDiv = document.getElementById('loading');
             const submitBtn = document.getElementById('submitBtn');
             const statusMessage = document.getElementById('statusMessage');
             const recommendationsDiv = document.getElementById('recommendations');
             const recipesSection = document.getElementById('recipesSection');
-            
+
             loadingDiv.classList.add('active');
             submitBtn.disabled = true;
             statusMessage.style.display = 'none';
             recommendationsDiv.innerHTML = '';
             recipesSection.style.display = 'none';
-            
-            const formData = new FormData();
-            formData.append('image', document.getElementById('imageInput').files[0]);
-            formData.append('calories', document.getElementById('calories').value);
-            formData.append('fats', document.getElementById('fats').value);
-            formData.append('carbohydrates', document.getElementById('carbohydrates').value);
-            formData.append('protein', document.getElementById('protein').value);
 
             try {
+                const formData = new FormData(this);
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
-
-                if (!response.ok) {
-                    throw new Error(`Error: ${response.statusText}`);
-                }
-
                 const data = await response.json();
-                const recommendations = data.recommendations;
-                
-                // Update header images with first 3 recipe images
-                if (recommendations && recommendations.length >= 3) {
-                    const headerImages = document.getElementById('headerImages');
-                    headerImages.innerHTML = `
-                        <img src="${recommendations[0].image_url}" alt="${recommendations[0].recipe_name}" class="header-image" onerror="this.src='https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=200&fit=crop'">
-                        <img src="${recommendations[1].image_url}" alt="${recommendations[1].recipe_name}" class="header-image" onerror="this.src='https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&h=200&fit=crop'">
-                        <img src="${recommendations[2].image_url}" alt="${recommendations[2].recipe_name}" class="header-image" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=200&fit=crop'">
-                    `;
-                }
-                
-                loadingDiv.classList.remove('active');
-                submitBtn.disabled = false;
-                
-                if (data.is_fallback) {
-                    statusMessage.className = 'status-message warning';
-                    statusMessage.textContent = '⚡ ' + data.message;
-                    statusMessage.style.display = 'block';
-                } else {
-                    statusMessage.className = 'status-message info';
-                    statusMessage.textContent = '✨ ' + data.message;
-                    statusMessage.style.display = 'block';
+                if (!response.ok) {
+                    throw new Error(data.error || `Request failed (${response.status})`);
                 }
 
+                const recommendations = data.recommendations;
+                if (!Array.isArray(recommendations) || recommendations.length === 0) {
+                    throw new Error('No recipes were found for those preferences.');
+                }
+
+                statusMessage.className = 'status-message info';
+                statusMessage.textContent = data.message;
+                statusMessage.style.display = 'block';
                 recommendations.forEach((recipe, index) => {
                     const recipeCard = document.createElement('div');
                     recipeCard.className = 'recipe-card';
 
-                    recipeCard.innerHTML = `
-                        <div class="recipe-rank">#${index + 1}</div>
-                        <div class="recipe-image">
-                            <div class="recipe-image-inner">
-                               
-                            </div>
-                        </div>
-                        <div class="recipe-content">
-                            <h4 class="recipe-name">${recipe.recipe_name}</h4>
-                            <div class="recipe-ingredients">
-                                <div class="recipe-ingredients-title">Ingredients</div>
-                                <div class="recipe-ingredients-list">${recipe.ingredients_list}</div>
-                            </div>
-                            <div class="recipe-stats">
-                                <div class="stat">
-                                    <div class="stat-label">Match</div>
-                                    <div class="stat-value">${recipe.similarity_score.toFixed(1)}%</div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-label">Rating</div>
-                                    <div class="stat-value rating">${recipe.avrg_rate.toFixed(1)} ⭐</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                    const rank = document.createElement('div');
+                    rank.className = 'recipe-rank';
+                    rank.textContent = `#${index + 1}`;
+
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'recipe-image';
+                    const imageInner = document.createElement('div');
+                    imageInner.className = 'recipe-image-inner';
+                    const image = document.createElement('img');
+                    image.src = recipe.image_url || '/static/images/food.png';
+                    image.alt = recipe.recipe_name;
+                    image.addEventListener('error', () => {
+                        image.src = '/static/images/food.png';
+                    }, { once: true });
+                    imageInner.appendChild(image);
+                    imageContainer.appendChild(imageInner);
+
+                    const content = document.createElement('div');
+                    content.className = 'recipe-content';
+                    const name = document.createElement('h4');
+                    name.className = 'recipe-name';
+                    name.textContent = recipe.recipe_name;
+
+                    const ingredients = document.createElement('div');
+                    ingredients.className = 'recipe-ingredients';
+                    const ingredientsTitle = document.createElement('div');
+                    ingredientsTitle.className = 'recipe-ingredients-title';
+                    ingredientsTitle.textContent = 'Ingredients';
+                    const ingredientsList = document.createElement('div');
+                    ingredientsList.className = 'recipe-ingredients-list';
+                    ingredientsList.textContent = recipe.ingredients_list;
+                    ingredients.append(ingredientsTitle, ingredientsList);
+
+                    const stats = document.createElement('div');
+                    stats.className = 'recipe-stats';
+                    const match = document.createElement('div');
+                    match.className = 'stat';
+                    match.innerHTML = '<div class="stat-label">Match</div>';
+                    const matchValue = document.createElement('div');
+                    matchValue.className = 'stat-value';
+                    matchValue.textContent = `${Number(recipe.similarity_score).toFixed(1)}%`;
+                    match.appendChild(matchValue);
+
+                    const rating = document.createElement('div');
+                    rating.className = 'stat';
+                    rating.innerHTML = '<div class="stat-label">Rating</div>';
+                    const ratingValue = document.createElement('div');
+                    ratingValue.className = 'stat-value rating';
+                    ratingValue.textContent = `${Number(recipe.avrg_rate).toFixed(1)} ⭐`;
+                    rating.appendChild(ratingValue);
+                    stats.append(match, rating);
+
+                    content.append(name, ingredients, stats);
+                    recipeCard.append(rank, imageContainer, content);
 
                     recommendationsDiv.appendChild(recipeCard);
                 });
 
                 recipesSection.style.display = 'block';
                 recipesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                
+
             } catch (error) {
                 console.error('An error occurred:', error);
+                statusMessage.className = 'status-message warning';
+                statusMessage.textContent = error.message || 'An error occurred while fetching recommendations.';
+                statusMessage.style.display = 'block';
+            } finally {
                 loadingDiv.classList.remove('active');
                 submitBtn.disabled = false;
-                
-                statusMessage.className = 'status-message warning';
-                statusMessage.textContent = '❌ An error occurred while fetching recommendations. Please try again.';
-                statusMessage.style.display = 'block';
             }
         };
     </script>
